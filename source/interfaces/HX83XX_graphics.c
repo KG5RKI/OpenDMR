@@ -32,6 +32,8 @@
 #include "graphics.h"
 #include "lcd.h"
 
+const int FONT_SIZE_3_HEIGHT = 8;
+
 #define INLINE __attribute__((always_inline)) inline
 #define LE2BE(x) __builtin_bswap16(x)
 // number representing the maximum angle (e.g. if 100, then if you pass in start=0 and end=50, you get a half circle)
@@ -97,12 +99,12 @@ INLINE void renderRows(int16_t startRow, int16_t endRow)
 
 INLINE void printCentered(uint8_t y, const  char *text, font_t fontSize)
 {
-	printCore(0, y, text, fontSize, TEXT_ALIGN_CENTER, false);
+	printCore(0, y, text, fontSize, TEXT_ALIGN_CENTER, COLOR_WHITE);
 }
 
 INLINE void printAt(uint8_t x, uint8_t y,const  char *text, font_t fontSize)
 {
-	printCore(x, y, text, fontSize, TEXT_ALIGN_LEFT, false);
+	printCore(x, y, text, fontSize, TEXT_ALIGN_LEFT, COLOR_WHITE);
 }
 
 INLINE int printCore(int16_t x, int16_t y, const char *szMsg, font_t fontSize, textAlign_t alignment, uint16_t color)

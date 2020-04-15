@@ -41,6 +41,9 @@
 #define COLOR_BLACK 0x0000
 #define COLOR_WHITE 0xFFFF
 
+// Some radios have different height for the font size 3
+extern const int FONT_SIZE_3_HEIGHT;
+
 typedef enum
 {
 	FONT_SIZE_1 = 0,

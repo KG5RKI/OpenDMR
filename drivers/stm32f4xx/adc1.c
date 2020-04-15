@@ -28,6 +28,11 @@
 #include "adc1.h"
 #include "gpio.h"
 
+// TODO: Make this specific for every radio model using ifdefs
+const int CUTOFF_VOLTAGE_UPPER_HYST = 64;
+const int CUTOFF_VOLTAGE_LOWER_HYST = 62;
+const int BATTERY_MAX_VOLTAGE = 82;
+
 uint16_t measurements[4];
 
 void adc1_init()

@@ -17,7 +17,17 @@
  */
 #include <user_interface/menuSystem.h>
 #include <user_interface/uiLocalisation.h>
+#include <FreeRTOS.h>
+#include <semphr.h>
+#include <stdio.h>
+#include "lcd.h"
+#include "adc1.h"
 
+#define DISPLAY_SIZE_Y SCREEN_HEIGHT
+#define DISPLAY_SIZE_X SCREEN_WIDTH
+
+// Defined in battery average task in main.c
+extern float averageBatteryVoltage;
 
 SemaphoreHandle_t battSemaphore = NULL;
 
@@ -100,9 +110,9 @@ int menuBattery(uiEvent_t *ev, bool isFirstRun)
 
 	if (isFirstRun)
 	{
-		ucClearBuf();
+		clearBuf();
 		menuDisplayTitle(currentLanguage->battery);
-		ucRenderRows(0, 2);
+		renderRows(0, 1);
 
 		updateScreen(true);
 	}
@@ -140,31 +150,31 @@ static void updateScreen(bool forceRedraw)
 				prevAverageBatteryVoltage = averageBatteryVoltage;
 
 				snprintf(buffer, 17, "%1d.%1dV", val1, val2);
-				buffer[16] = 0;
+				buffer[16] = '\0';
 
 				renderArrowOnly = false;
 
-				if (forceRedraw)
+			    if (forceRedraw)
 				{
 					// Clear whole drawing region
-					ucFillRect(0, 14, 128, DISPLAY_SIZE_Y - 14, true);
+					fillRect(0, 14, DISPLAY_SIZE_X, DISPLAY_SIZE_Y-14, COLOR_WHITE);
 					// Draw...
 					// Inner body frame
-					ucDrawRoundRect(97, 20, 26, DISPLAY_SIZE_Y-22, 3, true);
+					drawRoundRect(97, 20, 26, DISPLAY_SIZE_Y-22, 3, COLOR_WHITE);
 					// Outer body frame
-					ucDrawRoundRect(96, 19, 28, DISPLAY_SIZE_Y - 20, 3, true);
+					drawRoundRect(96, 19, 28, DISPLAY_SIZE_Y-20, 3, COLOR_WHITE);
 					// Positive pole frame
-					ucFillRoundRect(96+9, 15, 10, 6, 2, true);
+					fillRoundRect(96+9, 15, 10, 6, 2, COLOR_WHITE);
 				}
 				else
 				{
 					// Clear voltage area
-					ucFillRect(20, 22, (4 * 16), 32, true);
+					fillRect(20, 22, (4 * 16), 32, COLOR_BLACK);
 					// Clear level area
-					ucFillRoundRect(100, 23, 20, DISPLAY_SIZE_Y - 28, 2, false);
+					fillRoundRect(100, 23, 20, DISPLAY_SIZE_Y - 28, 2, COLOR_BLACK);
 				}
 
-				ucPrintAt(20, 22, buffer, FONT_SIZE_4);
+				printAt(20, 22, buffer, FONT_SIZE_4);
 
 				uint32_t h = (uint32_t)(((averageBatteryVoltage - CUTOFF_VOLTAGE_UPPER_HYST) * DISPLAY_SIZE_Y - 28) / (BATTERY_MAX_VOLTAGE - CUTOFF_VOLTAGE_UPPER_HYST));
 				if (h > DISPLAY_SIZE_Y - 28)
@@ -173,11 +183,11 @@ static void updateScreen(bool forceRedraw)
 				}
 
 				// Draw Level
-				ucFillRoundRect(100, 23 + DISPLAY_SIZE_Y - 28 - h , 20, h, 2, (averageBatteryVoltage < BATTERY_CRITICAL_VOLTAGE) ? blink : true);
+				fillRoundRect(100, 23 + DISPLAY_SIZE_Y - 28 - h , 20, h, 2, (averageBatteryVoltage < BATTERY_CRITICAL_VOLTAGE) ? blink : true);
 			}
 
 			// Low blinking arrow
-			ucFillTriangle(63, DISPLAY_SIZE_Y -1 , 59, (DISPLAY_SIZE_Y -5), 67, (DISPLAY_SIZE_Y -5), blink);
+			fillTriangle(63, DISPLAY_SIZE_Y -1 , 59, (DISPLAY_SIZE_Y -5), 67, (DISPLAY_SIZE_Y -5), blink);
 		}
 		break;
 
@@ -218,29 +228,29 @@ static void updateScreen(bool forceRedraw)
 				if (forceRedraw)
 				{
 					// Clear whole drawing region
-					ucFillRect(0, 14, 128, DISPLAY_SIZE_Y - 14, true);
+					fillRect(0, 14, 128, DISPLAY_SIZE_Y - 14, COLOR_WHITE);
 
 					// 2 axis chart
-					ucDrawFastVLine(chartX - 3, chartY - 2, chartHeight + 2 + 3, true);
-					ucDrawFastVLine(chartX - 2, chartY - 2, chartHeight + 2 + 2, true);
-					ucDrawFastHLine(chartX - 3, chartY + chartHeight + 2, chartWidth + 3 + 3, true);
-					ucDrawFastHLine(chartX - 2, chartY + chartHeight + 1, chartWidth + 3 + 2, true);
+					drawFastVLine(chartX - 3, chartY - 2, chartHeight + 2 + 3, COLOR_WHITE);
+					drawFastVLine(chartX - 2, chartY - 2, chartHeight + 2 + 2, COLOR_WHITE);
+					drawFastHLine(chartX - 3, chartY + chartHeight + 2, chartWidth + 3 + 3, COLOR_WHITE);
+					drawFastHLine(chartX - 2, chartY + chartHeight + 1, chartWidth + 3 + 2, COLOR_WHITE);
 
 					// Min/Max Voltage ticks and values
-					ucDrawFastHLine(chartX - 6, (chartY + chartHeight) - minVH, 3, true);
-					ucPrintAt(chartX - 3 - 12 - 3, ((chartY + chartHeight) - minVH) - 3, "7V", FONT_SIZE_1);
-					ucDrawFastHLine(chartX - 6, (chartY + chartHeight) - maxVH, 3, true);
-					ucPrintAt(chartX - 3 - 12 - 3, ((chartY + chartHeight) - maxVH) - 3, "8V", FONT_SIZE_1);
+					drawFastHLine(chartX - 6, (chartY + chartHeight) - minVH, 3, COLOR_WHITE);
+					printAt(chartX - 3 - 12 - 3, ((chartY + chartHeight) - minVH) - 3, "7V", FONT_SIZE_1);
+					drawFastHLine(chartX - 6, (chartY + chartHeight) - maxVH, 3, COLOR_WHITE);
+					printAt(chartX - 3 - 12 - 3, ((chartY + chartHeight) - maxVH) - 3, "8V", FONT_SIZE_1);
 
 					// Time ticks
 					for (uint8_t i = 0; i < chartWidth + 2; i += 22 /* ~ 15 minutes */)
 					{
-						ucSetPixel(chartX + i, (chartY + chartHeight) + 3, true);
+						setPixel(chartX + i, (chartY + chartHeight) + 3, COLOR_WHITE);
 					}
 				}
 				else
 				{
-					ucFillRect(chartX, chartY, chartWidth, chartHeight, true);
+					fillRect(chartX, chartY, chartWidth, chartHeight, COLOR_WHITE);
 				}
 
 				// Draw chart values, according to style
@@ -249,28 +259,28 @@ static void updateScreen(bool forceRedraw)
 					uint32_t y = (uint32_t)(((hist[i] - CUTOFF_VOLTAGE_UPPER_HYST) * chartHeight) / (BATTERY_MAX_VOLTAGE - CUTOFF_VOLTAGE_UPPER_HYST));
 
 					if (graphStyle == GRAPH_FILL)
-						ucDrawFastVLine(chartX + i, ((chartY + chartHeight) - y), y, true);
+						drawFastVLine(chartX + i, ((chartY + chartHeight) - y), y, COLOR_WHITE);
 					else
-						ucSetPixel(chartX + i, ((chartY + chartHeight) - y), true);
+						setPixel(chartX + i, ((chartY + chartHeight) - y), COLOR_WHITE);
 				}
 
 				// Min/Max dot lines
 				for (uint8_t i = 0; i < chartWidth + 2; i++)
 				{
-					ucSetPixel(chartX + i, ((chartY + chartHeight) - minVH), (i % 2) ? false : true);
-					ucSetPixel(chartX + i, ((chartY + chartHeight) - maxVH), (i % 2) ? false : true);
+					setPixel(chartX + i, ((chartY + chartHeight) - minVH), (i % 2) ? false : COLOR_WHITE);
+					setPixel(chartX + i, ((chartY + chartHeight) - maxVH), (i % 2) ? false : COLOR_WHITE);
 				}
 			}
 
 			// Upwards blinking arrow
-			ucFillTriangle(63,(DISPLAY_SIZE_Y - 5), 59,(DISPLAY_SIZE_Y - 1), 67,(DISPLAY_SIZE_Y - 1), blink);
+			fillTriangle(63,(DISPLAY_SIZE_Y - 5), 59,(DISPLAY_SIZE_Y - 1), 67,(DISPLAY_SIZE_Y - 1), blink);
 		}
 		break;
 	}
 
 	blink = !blink;
 
-	ucRenderRows((renderArrowOnly ? 7 : 1), 8);
+	renderRows((renderArrowOnly ? 7 : 1), 8);
 }
 
 static void handleEvent(uiEvent_t *ev)

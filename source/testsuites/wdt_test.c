@@ -37,7 +37,7 @@
 
 void test(void *arg)
 {
-    wdt_configure(WDT_DIV16, 0x753);    /* expires in 1s when clock is 30kHz */
+    wdt_configure(WDT_DIV32, 0x753);    /* expires in 1s when clock is 30kHz */
     wdt_start();
 
     for(char i = 0; i < 4; i++)

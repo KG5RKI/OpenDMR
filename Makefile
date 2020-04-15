@@ -10,8 +10,11 @@ RADIO := MD380
 ##
 ## List here your source files (both .s, .c and .cpp)
 ##
-SRC := source/testsuites/wdt_test.c
-#source/main.c source/io/keyboard.c source/interfaces/pit.c
+SRC := source/testsuites/demo_test.c \
+       source/io/keyboard.c source/io/rotary_switch.c source/io/buttons.c \
+       source/interfaces/pit.c source/functions/ticks.c \
+       source/user_interface/menuSystem.c source/user_interface/menuBattery.c \
+       source/user_interface/uiLocalisation.c
 
 ##
 ## Selection of MCU platform and baseband
@@ -80,7 +83,8 @@ LIBS :=
 ##
 ## List here additional include directories (in the form -Iinclude_dir)
 ##
-INCLUDE_DIRS := -Iinclude/io -Iinclude/interfaces -Iinclude/hardware
+INCLUDE_DIRS := -Iinclude/io -Iinclude/interfaces -Iinclude/hardware \
+                -Iinclude/user_interface -Iinclude/functions -Isource
 
 ##
 ## List here additional defines

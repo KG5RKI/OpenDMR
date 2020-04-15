@@ -31,6 +31,10 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
 
+extern const int CUTOFF_VOLTAGE_UPPER_HYST;
+extern const int CUTOFF_VOLTAGE_LOWER_HYST;
+extern const int BATTERY_MAX_VOLTAGE;
+
 /**
  * Driver for ADC1, used to continuously sample the following channels:
  * - ADC1_CH0 (PA0): output value of the volume potentiometer;

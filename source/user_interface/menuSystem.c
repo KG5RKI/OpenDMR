@@ -17,8 +17,15 @@
  */
 #include <user_interface/menuSystem.h>
 #include <user_interface/uiLocalisation.h>
-#include <settings.h>
+//#include <settings.h>
 #include <ticks.h>
+#include <string.h>
+#include "graphics.h"
+#include "lcd.h"
+#include "uiLocalisation.h"
+
+// XXX: hardcode language as we do not support settings
+const stringsTable_t *currentLanguage = &languages[0];
 
 int menuDisplayLightTimer=-1;
 menuItemNew_t *gMenuCurrentMenuList;
@@ -40,69 +47,73 @@ menuControlDataStruct_t menuControlData = { .stackPosition = 0, .stack = {0,0,0,
  *
  * ---------------------- IMPORTANT ----------------------------
  */
-const menuItemNew_t * menusData[] = { 	NULL,// splash
-										NULL,// power off
-										NULL,// vfo mode
-										NULL,// channel mode
-										menuDataMainMenu,
-										menuDataContact,
-										NULL,// zone
-										NULL,// Battery
-										NULL,// Firmwareinfo
-										NULL,// Numerical entry
-										NULL,// Tx
-										NULL,// RSSI
-										NULL,// LastHeard
-										NULL,// Options
-										NULL,// Display options
-										NULL,// Sound options
-										NULL,// Credits
-										NULL,// Channel Details
-										NULL,// hotspot mode
-										NULL,// CPS
-										NULL,// Quick menu - Channel
-										NULL,// Quick menu - VFO
-										NULL,// Lock screen
-										NULL,// Contact List
-										NULL,// Contact Quick List (SK2+#)
-										NULL,// Contact List Quick Menu
-										NULL,// Contact Details
-										NULL,// New Contact
-										NULL,// Language
-										NULL,// Private Call
-								};
+const menuItemNew_t * menusData[] = { NULL };
 
-const menuFunctionPointer_t menuFunctions[] = { menuSplashScreen,
-												menuPowerOff,
-												menuVFOMode,
-												menuChannelMode,
-												menuDisplayMenuList,
-												menuDisplayMenuList,
-												menuZoneList,
-												menuBattery,
-												menuFirmwareInfoScreen,
-												menuNumericalEntry,
-												menuTxScreen,
-												menuRSSIScreen,
-												menuLastHeard,
-												menuOptions,
-												menuDisplayOptions,
-												menuSoundOptions,
-												menuCredits,
-												menuChannelDetails,
-												menuHotspotMode,
-												menuCPS,
-												menuChannelModeQuickMenu,
-												menuVFOModeQuickMenu,
-                                                menuLockScreen,
-												menuContactList,
-												menuContactList,
-												menuContactListSubMenu,
-												menuContactDetails,
-												menuContactDetails,
-												menuLanguage,
-												menuPrivateCall
-};
+//                                        NULL,// splash
+//										NULL,// power off
+//										NULL,// vfo mode
+//										NULL,// channel mode
+//										menuDataMainMenu,
+//										menuDataContact,
+//										NULL,// zone
+//										NULL,// Battery
+//										NULL,// Firmwareinfo
+//										NULL,// Numerical entry
+//										NULL,// Tx
+//										NULL,// RSSI
+//										NULL,// LastHeard
+//										NULL,// Options
+//										NULL,// Display options
+//										NULL,// Sound options
+//										NULL,// Credits
+//										NULL,// Channel Details
+//										NULL,// hotspot mode
+//										NULL,// CPS
+//										NULL,// Quick menu - Channel
+//										NULL,// Quick menu - VFO
+//										NULL,// Lock screen
+//										NULL,// Contact List
+//										NULL,// Contact Quick List (SK2+#)
+//										NULL,// Contact List Quick Menu
+//										NULL,// Contact Details
+//										NULL,// New Contact
+//										NULL,// Language
+//										NULL,// Private Call
+//								};
+
+const menuFunctionPointer_t menuFunctions[] = { menuBattery };
+
+//                                                menuSplashScreen,
+//												menuPowerOff,
+//												menuVFOMode,
+//												menuChannelMode,
+//												menuDisplayMenuList,
+//												menuDisplayMenuList,
+//												menuZoneList,
+//												menuBattery,
+//												menuFirmwareInfoScreen,
+//												menuNumericalEntry,
+//												menuTxScreen,
+//												menuRSSIScreen,
+//												menuLastHeard,
+//												menuOptions,
+//												menuDisplayOptions,
+//												menuSoundOptions,
+//												menuCredits,
+//												menuChannelDetails,
+//												menuHotspotMode,
+//												menuCPS,
+//												menuChannelModeQuickMenu,
+//												menuVFOModeQuickMenu,
+//                                                menuLockScreen,
+//												menuContactList,
+//												menuContactList,
+//												menuContactListSubMenu,
+//												menuContactDetails,
+//												menuContactDetails,
+//												menuLanguage,
+//												menuPrivateCall
+//};
 
 void menuSystemPushNewMenu(int menuNumber)
 {
@@ -190,6 +201,7 @@ void menuSystemCallCurrentMenuTick(uiEvent_t *ev)
 
 void displayLightTrigger(void)
 {
+    /* XXX: We still do not support persistent settings in MD380
 	if ((nonVolatileSettings.backlightMode == BACKLIGHT_MODE_AUTO) ||
 			((nonVolatileSettings.backlightMode == BACKLIGHT_MODE_MANUAL) && fw_displayIsBacklightLit()))
 	{
@@ -199,16 +211,19 @@ void displayLightTrigger(void)
 		}
 		fw_displayEnableBacklight(true);
 	}
+    */
 }
 
 // use -1 to force LED on all the time
 void displayLightOverrideTimeout(int timeout)
 {
+    /* XXX: We still do not support persistent settings in MD380
 	if (nonVolatileSettings.backlightMode == BACKLIGHT_MODE_AUTO)
 	{
 		menuDisplayLightTimer = timeout;
 		fw_displayEnableBacklight(true);
 	}
+    */
 }
 
 void menuInitMenuSystem(void)
@@ -224,7 +239,8 @@ void menuInitMenuSystem(void)
 void menuSystemLanguageHasChanged(void)
 {
 	// Force full update of menuChannelMode() on next call (if isFirstRun arg. is true)
-	menuChannelColdStart();
+    // XXX: we still do not support channel mode
+	//menuChannelColdStart();
 }
 
 
@@ -292,8 +308,8 @@ const menuItemNew_t menuDataContactContact [] = {
 
 void menuDisplayTitle(const char *title)
 {
-	ucDrawFastHLine(0, 13, 128, true);
-	ucPrintCore(0, 3, title, FONT_SIZE_2, TEXT_ALIGN_CENTER, false);
+	drawFastHLine(0, 13, SCREEN_WIDTH, COLOR_WHITE);
+	printCore(0, 3, title, FONT_SIZE_2, TEXT_ALIGN_CENTER, COLOR_WHITE);
 }
 
 void menuDisplayEntry(int loopOffset, int focusedItem,const char *entryText)
@@ -306,14 +322,14 @@ const int MENU_START_Y = 32;
 const int HIGHLIGHT_START_Y = 32;
 #endif
 
-	bool focused = (focusedItem == gMenusCurrentItemIndex);
+	uint16_t focused = (focusedItem == gMenusCurrentItemIndex) ? COLOR_WHITE : COLOR_BLACK;
 
 	if (focused)
 	{
-		ucFillRoundRect(0, HIGHLIGHT_START_Y +  (loopOffset * FONT_SIZE_3_HEIGHT), 128, FONT_SIZE_3_HEIGHT, 2, true);
+		fillRoundRect(0, HIGHLIGHT_START_Y +  (loopOffset * FONT_SIZE_3_HEIGHT), 128, FONT_SIZE_3_HEIGHT, 2, COLOR_WHITE);
 	}
 
-	ucPrintCore(0,  MENU_START_Y +  (loopOffset * FONT_SIZE_3_HEIGHT), entryText, FONT_SIZE_3, TEXT_ALIGN_LEFT, focused);
+	printCore(0,  MENU_START_Y +  (loopOffset * FONT_SIZE_3_HEIGHT), entryText, FONT_SIZE_3, TEXT_ALIGN_LEFT, focused);
 
 }
 
@@ -365,7 +381,7 @@ int menuGetKeypadKeyValue(uiEvent_t *ev, bool digitsOnly)
 void menuUpdateCursor(int pos, bool moved, bool render)
 {
 	static uint32_t lastBlink = 0;
-	static bool     blink = false;
+	static uint16_t blink = COLOR_BLACK;
 	uint32_t        m = fw_millis();
 
 	if (moved) {
@@ -373,13 +389,13 @@ void menuUpdateCursor(int pos, bool moved, bool render)
 	}
 	if (moved || (m - lastBlink) > 500)
 	{
-		ucDrawFastHLine(pos*8, 46, 8, blink);
+		drawFastHLine(pos*8, 46, 8, blink);
 
-		blink = !blink;
+		blink = ~blink;
 		lastBlink = m;
 
 		if (render) {
-			ucRenderRows(5,6);
+			renderRows(5,6);
 		}
 	}
 }
