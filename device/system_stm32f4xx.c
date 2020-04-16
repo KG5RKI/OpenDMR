@@ -281,6 +281,7 @@ static void SetSysClock(void)
 /******************************************************************************/
   __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
   
+  #ifndef USE_HSI
   /* Enable HSE */
   RCC->CR |= ((uint32_t)RCC_CR_HSEON);
  
@@ -299,9 +300,10 @@ static void SetSysClock(void)
   {
     HSEStatus = (uint32_t)0x00;
   }
+  #endif
+//   if (HSEStatus == (uint32_t)0x01)
+//   {
 
-  if (HSEStatus == (uint32_t)0x01)
-  {
     /* Select regulator voltage output Scale 1 mode, System frequency up to 168 MHz */
     RCC->APB1ENR |= RCC_APB1ENR_PWREN;
     PWR->CR |= PWR_CR_VOS;
@@ -316,9 +318,15 @@ static void SetSysClock(void)
     RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
 
     /* Configure the main PLL */
+    #ifdef USE_HSI
+    #define PLL_M      ((HSI_VALUE) / 1000000UL)
+    RCC->PLLCFGR = PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) |
+                   (RCC_PLLCFGR_PLLSRC_HSI) | (PLL_Q << 24);
+
+    #else
     RCC->PLLCFGR = PLL_M | (PLL_N << 6) | (((PLL_P >> 1) -1) << 16) |
                    (RCC_PLLCFGR_PLLSRC_HSE) | (PLL_Q << 24);
-
+    #endif
     /* Enable the main PLL */
     RCC->CR |= RCC_CR_PLLON;
 
@@ -338,11 +346,11 @@ static void SetSysClock(void)
     while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS ) != RCC_CFGR_SWS_PLL);
     {
     }
-  }
-  else
-  { /* If HSE fails to start-up, the application will have wrong clock
-         configuration. User can add here some code to deal with this error */
-  }
+//   }
+//   else
+//   { /* If HSE fails to start-up, the application will have wrong clock
+//         configuration. User can add here some code to deal with this error */
+//  }
 
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
