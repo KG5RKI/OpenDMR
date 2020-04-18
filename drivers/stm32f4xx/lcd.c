@@ -117,10 +117,11 @@ static uint16_t *frameBuffer;
 /* Flag to check if there is a DMA transaction from framebuffer to screen */
 bool renderInProgress;
 
-void __attribute__((used)) DMA2_Stream7_IRQHandler()
+void DMA2_Stream7_IRQHandler()
 {
-    DMA2->HIFCR |= DMA_HIFCR_CTCIF7 | DMA_HIFCR_CTEIF7;    /* Clear flags */
+    DMA2->HIFCR = DMA_HIFCR_CTCIF7 | DMA_HIFCR_CTEIF7;    /* Clear flags */
     gpio_setPin(CS);
+    gpio_setPin(GPIOE,0); //DEBUG
     renderInProgress = false;
 }
 
@@ -252,6 +253,8 @@ void lcd_init()
 
     delayMs(20);
     gpio_setPin(RST);   /* Exit from reset */
+
+    gpio_setMode(GPIOE, 0, OUTPUT); // DEBUG
 
     gpio_clearPin(CS);
 
@@ -396,6 +399,8 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow)
     GPIOD->MODER |= 0xA000000A;     /* Back to AF mode */
     GPIOE->MODER |= 0x2A8000;
 
+    gpio_clearPin(GPIOE,0); //DEBUG
+
     gpio_clearPin(CS);
 
     /* Configure start and end rows in display driver */
@@ -417,6 +422,7 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow)
      * we have to set the transfer size to twice the framebuffer size, since
      * this one is made of 16 bit variables.
      */
+    DMA2->HIFCR = DMA_HIFCR_CTCIF7 | DMA_HIFCR_CTEIF7;
     DMA2_Stream7->NDTR = (endRow - startRow)*SCREEN_WIDTH*2;
     DMA2_Stream7->PAR  = ((uint32_t ) frameBuffer + (startRow*SCREEN_WIDTH*2));
     DMA2_Stream7->M0AR = LCD_FSMC_ADDR_DATA;
