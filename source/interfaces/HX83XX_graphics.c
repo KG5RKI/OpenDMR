@@ -31,6 +31,7 @@
 #include "HX83XX_charset.h"
 #include "graphics.h"
 #include "lcd.h"
+#include "gpio.h"
 
 const int FONT_SIZE_3_HEIGHT = 8;
 
@@ -71,7 +72,7 @@ INLINE void graphicsInit(uint16_t bg, uint16_t fg, uint16_t font)
     lcd_init();
     screenBuf = lcd_getFrameBuffer();
     clearBuf();
-    //render();
+    render();
 }
 
 INLINE void clearBuf(void)
@@ -99,16 +100,19 @@ INLINE void clearRows(int16_t startRow, int16_t endRow, uint16_t backgroundColor
 
 INLINE void render(void)
 {
-    /* Wait for previous rendering operations to terminate */
-    while (lcd_renderingInProgress()) ;
 	renderRows(0,N_ROWS);
 }
 
 INLINE void renderRows(int16_t startRow, int16_t endRow)
 {
+    gpio_setPin(GPIOE, 1);
     /* Wait for previous rendering operations to terminate */
     while (lcd_renderingInProgress()) ;
     lcd_renderRows(startRow * ROW_HEIGHT, endRow * ROW_HEIGHT);
+    /* Force synchronous rendering, asynchronous rendering is broken */
+    while (lcd_renderingInProgress()) {
+    }
+    gpio_clearPin(GPIOE, 1);
 }
 
 INLINE void printCentered(uint8_t y, const  char *text, font_t fontSize)

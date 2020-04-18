@@ -79,10 +79,10 @@ int main (void)
 #else
     graphicsInit(COLOR_WHITE, COLOR_BLACK, COLOR_BLACK);
 #endif
-    clearBuf();
     lcd_setBacklightLevel(254);
 
     // Initialize everything
+    adc1_init();
     fw_init_keyboard();
     init_pit();
 	menuBatteryInit(); // Initialize circular buffer

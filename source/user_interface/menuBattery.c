@@ -111,9 +111,8 @@ int menuBattery(uiEvent_t *ev, bool isFirstRun)
 
 	if (isFirstRun)
 	{
-		clearBuf();
 		menuDisplayTitle(currentLanguage->battery);
-		renderRows(0, 1);
+        render();
 
 		updateScreen(true);
 	}
@@ -142,8 +141,8 @@ static void updateScreen(bool forceRedraw)
 		{
 			static float prevAverageBatteryVoltage = 0.0f;
 
-			if ((prevAverageBatteryVoltage != averageBatteryVoltage) || (averageBatteryVoltage < BATTERY_CRITICAL_VOLTAGE) || forceRedraw)
-			{
+			//if ((prevAverageBatteryVoltage != averageBatteryVoltage) || (averageBatteryVoltage < BATTERY_CRITICAL_VOLTAGE) || forceRedraw)
+			//{
 				char buffer[17];
 				int val1 = averageBatteryVoltage / 10;
 				int val2 = averageBatteryVoltage - (val1 * 10);
@@ -158,7 +157,7 @@ static void updateScreen(bool forceRedraw)
 			    if (forceRedraw)
 				{
 					// Clear whole drawing region
-					fillRect(0, 14, DISPLAY_SIZE_X, DISPLAY_SIZE_Y-14, COLOR_WHITE);
+					fillRect(0, 14, DISPLAY_SIZE_X, DISPLAY_SIZE_Y-14, COLOR_BLACK);
 					// Draw...
 					// Inner body frame
 					drawRoundRect(97, 20, 26, DISPLAY_SIZE_Y-22, 3, COLOR_WHITE);
@@ -185,7 +184,7 @@ static void updateScreen(bool forceRedraw)
 
 				// Draw Level
 				fillRoundRect(100, 23 + DISPLAY_SIZE_Y - 28 - h , 20, h, 2, (averageBatteryVoltage < BATTERY_CRITICAL_VOLTAGE) ? blink : true);
-			}
+			//}
 
 			// Low blinking arrow
 			fillTriangle(63, DISPLAY_SIZE_Y -1 , 59, (DISPLAY_SIZE_Y -5), 67, (DISPLAY_SIZE_Y -5), blink);
