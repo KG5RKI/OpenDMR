@@ -429,7 +429,7 @@ bool lcd_renderingInProgress()
      * GPIOD->ODR.
      */
     uint16_t pinValue = (GPIOD->ODR & (1 << 6));
-    return (pinValue == 0) ? 1 : 0;
+    return ((pinValue == 0) || ((DMA2_Stream7->CR & DMA_SxCR_EN) != 0)) ? 1 : 0;
 }
 
 uint16_t *lcd_getFrameBuffer()
