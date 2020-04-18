@@ -114,10 +114,14 @@
  */
 static uint16_t *frameBuffer;
 
+/* Flag to check if there is a DMA transaction from framebuffer to screen */
+bool renderInProgress;
+
 void __attribute__((used)) DMA2_Stream7_IRQHandler()
 {
     DMA2->HIFCR |= DMA_HIFCR_CTCIF7 | DMA_HIFCR_CTEIF7;    /* Clear flags */
     gpio_setPin(CS);
+    renderInProgress = false;
 }
 
 static inline __attribute__((__always_inline__)) void writeCmd(uint8_t cmd)
@@ -404,6 +408,9 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow)
     /* Now, write to memory */
     writeCmd(CMD_RAMWR);
 
+    /* "Lock" framebuffer usage */
+    renderInProgress = true;
+
     /*
      * Configure DMA2 stream 7 to send framebuffer data to the screen.
      * Both source and destination memory sizes are configured to 8 bit, thus
@@ -428,8 +435,9 @@ bool lcd_renderingInProgress()
      * Render is in progress if PD6 is low. Its value can be tested reading
      * GPIOD->ODR.
      */
-    uint16_t pinValue = (GPIOD->ODR & (1 << 6));
-    return ((pinValue == 0) || ((DMA2_Stream7->CR & DMA_SxCR_EN) != 0)) ? 1 : 0;
+//     uint16_t pinValue = (GPIOD->ODR & (1 << 6));
+//     return ((pinValue == 0) || ((DMA2_Stream7->CR & DMA_SxCR_EN) != 0)) ? 1 : 0;
+    return renderInProgress;
 }
 
 uint16_t *lcd_getFrameBuffer()
