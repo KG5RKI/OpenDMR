@@ -55,17 +55,29 @@ static float _angleOffset = DEFAULT_ANGLE_OFFSET;
 
 uint16_t *screenBuf;
 
-INLINE void graphicsInit(uint16_t backgroundColor)
+/*
+ * These two colors will be used as background,foreground and font color
+ * unless otherwise specified
+ */
+uint16_t bgColor;
+uint16_t fgColor;
+uint16_t fontColor;
+
+INLINE void graphicsInit(uint16_t bg, uint16_t fg, uint16_t font)
 {
+    bgColor = bg;
+    fgColor = fg;
+    fontColor = font;
     lcd_init();
     screenBuf = lcd_getFrameBuffer();
     clearBuf();
-    render();
+    //render();
 }
 
 INLINE void clearBuf(void)
 {
-	memset(screenBuf, 0x00, FB_SIZE);
+    for(int i = 0; i < FB_SIZE / 2; i++)
+        screenBuf[i] = bgColor;
 }
 
 INLINE void clearRows(int16_t startRow, int16_t endRow, uint16_t backgroundColor)
@@ -87,6 +99,8 @@ INLINE void clearRows(int16_t startRow, int16_t endRow, uint16_t backgroundColor
 
 INLINE void render(void)
 {
+    /* Wait for previous rendering operations to terminate */
+    while (lcd_renderingInProgress()) ;
 	renderRows(0,N_ROWS);
 }
 
@@ -99,12 +113,12 @@ INLINE void renderRows(int16_t startRow, int16_t endRow)
 
 INLINE void printCentered(uint8_t y, const  char *text, font_t fontSize)
 {
-	printCore(0, y, text, fontSize, TEXT_ALIGN_CENTER, COLOR_WHITE);
+	printCore(0, y, text, fontSize, TEXT_ALIGN_CENTER, fontColor);
 }
 
 INLINE void printAt(uint8_t x, uint8_t y,const  char *text, font_t fontSize)
 {
-	printCore(x, y, text, fontSize, TEXT_ALIGN_LEFT, COLOR_WHITE);
+	printCore(x, y, text, fontSize, TEXT_ALIGN_LEFT, fontColor);
 }
 
 INLINE int printCore(int16_t x, int16_t y, const char *szMsg, font_t fontSize, textAlign_t alignment, uint16_t color)
@@ -731,17 +745,17 @@ INLINE void drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r,
 
 INLINE void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
 {
-	fillRect(x + r, y, w - 2 * r, h, !color);
+	fillRect(x + r, y, w - 2 * r, h, color);
 
 	// draw four corners
-	fillCircleHelper(x+w-r-1, y + r, r, 1, h - 2 * r - 1, color);
-	fillCircleHelper(x+r    , y + r, r, 2, h - 2 * r - 1, color);
+	fillCircleHelper(x+w-r-1, y + r, r, 1, h - 2 * r - 1, bgColor);
+	fillCircleHelper(x+r    , y + r, r, 2, h - 2 * r - 1, bgColor);
 }
 
 INLINE void drawRoundRectWithDropShadow(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
 {
 	fillRoundRect(x + 2, y, w, h, r, color); // Shadow
-	fillRoundRect(x, y - 2, w, h, r, !color); // Empty box
+	fillRoundRect(x, y - 2, w, h, r, bgColor); // Empty box
 	drawRoundRect(x, y - 2, w, h, r, color); // Outline
 }
 

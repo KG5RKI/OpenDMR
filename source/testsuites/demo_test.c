@@ -72,8 +72,14 @@ int main (void)
     printf("Welcome to OpenDMR v0.1 compiled for the MD380\n\r");
     printf("             Viva il DMR libero!              \n\r");
 
-    graphicsInit(COLOR_WHITE);
-    clearRows(0, 8, COLOR_WHITE);
+#ifdef LIGHT_THEME
+    graphicsInit(COLOR_WHITE, COLOR_BLACK, COLOR_BLACK);
+#elif DARK_THEME
+    graphicsInit(COLOR_BLACK, COLOR_WHITE, COLOR_WHITE);
+#else
+    graphicsInit(COLOR_WHITE, COLOR_BLACK, COLOR_BLACK);
+#endif
+    clearBuf();
     lcd_setBacklightLevel(254);
 
     // Initialize everything

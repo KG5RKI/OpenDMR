@@ -68,7 +68,7 @@ typedef enum
 	CHOICES_NUM
 } choice_t;
 
-void graphicsInit(uint16_t backgroundColor);
+void graphicsInit(uint16_t bg, uint16_t fg, uint16_t font);
 void clearBuf(void);
 void clearRows(int16_t startRow, int16_t endRow, uint16_t backgroundColor);
 void render(void);
