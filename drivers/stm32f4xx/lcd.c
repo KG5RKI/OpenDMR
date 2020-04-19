@@ -127,7 +127,6 @@ void DMA2_Stream7_IRQHandler()
     DMA2_Stream7->CR = 0;
 
     gpio_setPin(CS);
-    gpio_setPin(GPIOE,0); //DEBUG
     renderInProgress = false;
 }
 
@@ -260,10 +259,6 @@ void lcd_init()
     delayMs(20);
     gpio_setPin(RST);   /* Exit from reset */
 
-    gpio_setMode(GPIOE, 0, OUTPUT); // DEBUG
-
-    gpio_clearPin(CS);
-
     /**
      * The following command sequence has been taken as-is from Tytera original
      * firmware. Without it, screen needs framebuffer data to be sent very slowly,
@@ -271,6 +266,8 @@ void lcd_init()
      * Since we do not have the datasheet for the controller employed in this
      * screen, we can only copy-and-paste...
      */
+    gpio_clearPin(CS);
+
     writeCmd(0xfe);
     writeCmd(0xef);
     writeCmd(0xb4);
@@ -377,6 +374,7 @@ void lcd_terminate()
     /* Shut off backlight, FSMC and deallocate framebuffer */
     gpio_setMode(GPIOC, 6, OUTPUT);
     gpio_clearPin(GPIOC, 6);
+    DMA2_Stream7->CR = 0;
     RCC->APB2ENR &= ~RCC_APB2ENR_TIM8EN;
     RCC->AHB3ENR &= ~RCC_AHB3ENR_FSMCEN;
     if(frameBuffer != NULL)
@@ -392,7 +390,6 @@ void lcd_setBacklightLevel(uint8_t level)
 
 void lcd_renderRows(uint8_t startRow, uint8_t endRow)
 {
-
     /*
      * Put screen data lines back to alternate function mode, since they are in
      * common with keyboard buttons and the keyboard driver sets them as inputs.
@@ -404,8 +401,6 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow)
     GPIOE->MODER &= ~0x3FC000;
     GPIOD->MODER |= 0xA000000A;     /* Back to AF mode */
     GPIOE->MODER |= 0x2A8000;
-
-    gpio_clearPin(GPIOE,0); //DEBUG
 
     gpio_clearPin(CS);
 
@@ -449,12 +444,6 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow)
 
 bool lcd_renderingInProgress()
 {
-    /*
-     * Render is in progress if PD6 is low. Its value can be tested reading
-     * GPIOD->ODR.
-     */
-//     uint16_t pinValue = (GPIOD->ODR & (1 << 6));
-//     return ((pinValue == 0) || ((DMA2_Stream7->CR & DMA_SxCR_EN) != 0)) ? 1 : 0;
     return renderInProgress;
 }
 
