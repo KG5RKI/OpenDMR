@@ -35,15 +35,19 @@
 #include "gpio.h"
 #include "lcd.h"
 
+/* Comment out to test full render */
+#define TEST_SPLIT_RENDER
+
 void blink(void *arg)
 {
     lcd_init();
     lcd_setBacklightLevel(0xFF);
 
     uint16_t *fb = lcd_getFrameBuffer();
-
-    /* Upper half red and lower half green */
     size_t i = 0;
+
+    #ifndef TEST_SPLIT_RENDER
+    /* Upper half red and lower half green */
     for(; i < (SCREEN_HEIGHT*SCREEN_WIDTH)/2; i++)
     {
         fb[i] = __builtin_bswap16(0xF800); // red
@@ -72,6 +76,7 @@ void blink(void *arg)
     while(lcd_renderingInProgress()) ;
     lcd_render();
     vTaskDelay(500);
+    #endif
 
     /* All screen white */
     for(i = 0; i < SCREEN_HEIGHT*SCREEN_WIDTH; i++)
@@ -81,11 +86,27 @@ void blink(void *arg)
 
     while(lcd_renderingInProgress()) ;
     lcd_render();
-    vTaskDelay(500);
+
+    #ifdef TEST_SPLIT_RENDER
+    for(uint8_t y = 10; y < 20; y++)
+    {
+        fb[y*SCREEN_WIDTH] = __builtin_bswap16(0xF800);
+    }
+
+    while(lcd_renderingInProgress()) ;
+    lcd_renderRows(10, 20);
+
+    for(uint8_t y = 40; y < 60; y++)
+    {
+        fb[y*SCREEN_WIDTH] = __builtin_bswap16(0x001F);
+    }
+
+    while(lcd_renderingInProgress()) ;
+    lcd_renderRows(40, 60);
+    #endif
 
     while(1)
     {
-//         gpio_togglePin(GPIOE, 0);
         vTaskDelay(500);
     }
 }
