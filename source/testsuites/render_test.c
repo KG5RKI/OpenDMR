@@ -35,19 +35,16 @@
 #include "gpio.h"
 #include "lcd.h"
 
-/* Comment out to test full render */
-#define TEST_SPLIT_RENDER
-
 void blink(void *arg)
 {
     lcd_init();
     lcd_setBacklightLevel(0xFF);
 
     uint16_t *fb = lcd_getFrameBuffer();
-    size_t i = 0;
 
-    #ifndef TEST_SPLIT_RENDER
     /* Upper half red and lower half green */
+    puts("Full render test 1");
+    size_t i = 0;
     for(; i < (SCREEN_HEIGHT*SCREEN_WIDTH)/2; i++)
     {
         fb[i] = __builtin_bswap16(0xF800); // red
@@ -58,11 +55,12 @@ void blink(void *arg)
         fb[i] = __builtin_bswap16(0x07E0); // green
     }
 
-    while(lcd_renderingInProgress()) ;
+    while(lcd_renderingInProgress() == true){ }
     lcd_render();
-    vTaskDelay(500);
+//     vTaskDelay(500);
 
     /* Upper half green and lower half red */
+    puts("Full render test 2");
     for(i = 0; i < (SCREEN_HEIGHT*SCREEN_WIDTH)/2; i++)
     {
         fb[i] = __builtin_bswap16(0x07E0); // green
@@ -73,10 +71,9 @@ void blink(void *arg)
         fb[i] = __builtin_bswap16(0xF800); // red
     }
 
-    while(lcd_renderingInProgress()) ;
+    while(lcd_renderingInProgress() == true){ }
     lcd_render();
-    vTaskDelay(500);
-    #endif
+//     vTaskDelay(500);
 
     /* All screen white */
     puts("Clearing screen\r");
@@ -85,28 +82,8 @@ void blink(void *arg)
         fb[i] = __builtin_bswap16(0xFFFF);
     }
 
-    while(lcd_renderingInProgress()) ;
+    while(lcd_renderingInProgress() == true){ }
     lcd_render();
-
-    #ifdef TEST_SPLIT_RENDER
-    puts("Partial render 1\r");
-    for(uint8_t y = 10; y < 20; y++)
-    {
-        fb[y*SCREEN_WIDTH] = __builtin_bswap16(0xF800);
-    }
-
-    while(lcd_renderingInProgress()) ;
-    lcd_renderRows(10, 20);
-
-    puts("Partial render 2\r");
-    for(uint8_t y = 40; y < 60; y++)
-    {
-        fb[y*SCREEN_WIDTH] = __builtin_bswap16(0x001F);
-    }
-
-    while(lcd_renderingInProgress()) ;
-    lcd_renderRows(40, 60);
-    #endif
 
     puts("Render test end\r");
 
