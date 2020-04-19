@@ -119,7 +119,13 @@ bool renderInProgress;
 
 void DMA2_Stream7_IRQHandler()
 {
-    DMA2->HIFCR = DMA_HIFCR_CTCIF7 | DMA_HIFCR_CTEIF7;    /* Clear flags */
+    /* Clear flags and disable DMA*/
+    DMA2->HIFCR=DMA_HIFCR_CTCIF7
+              | DMA_HIFCR_CTEIF7
+              | DMA_HIFCR_CDMEIF7
+              | DMA_HIFCR_CFEIF7;
+    DMA2_Stream7->CR = 0;
+
     gpio_setPin(CS);
     gpio_setPin(GPIOE,0); //DEBUG
     renderInProgress = false;
@@ -422,10 +428,16 @@ void lcd_renderRows(uint8_t startRow, uint8_t endRow)
      * we have to set the transfer size to twice the framebuffer size, since
      * this one is made of 16 bit variables.
      */
-    DMA2->HIFCR = DMA_HIFCR_CTCIF7 | DMA_HIFCR_CTEIF7;
+
     DMA2_Stream7->NDTR = (endRow - startRow)*SCREEN_WIDTH*2;
     DMA2_Stream7->PAR  = ((uint32_t ) frameBuffer + (startRow*SCREEN_WIDTH*2));
     DMA2_Stream7->M0AR = LCD_FSMC_ADDR_DATA;
+
+    DMA2->HIFCR = DMA_HIFCR_CTCIF7
+                | DMA_HIFCR_CTEIF7
+                | DMA_HIFCR_CDMEIF7
+                | DMA_HIFCR_CFEIF7;
+    DMA2_Stream7->FCR = DMA_SxFCR_DMDIS;
     DMA2_Stream7->CR = DMA_SxCR_CHSEL         /* Channel 7                   */
                      | DMA_SxCR_PL_0          /* Medium priority             */
                      | DMA_SxCR_PINC          /* Increment source pointer    */
