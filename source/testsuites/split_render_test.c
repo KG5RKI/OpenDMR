@@ -55,7 +55,10 @@ void blink(void *arg)
     puts("Partial render 1\r");
     for(uint8_t y = 20; y < 40; y++)
     {
-        fb[y*SCREEN_WIDTH] = __builtin_bswap16(0xF800);
+        for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
+        {
+            fb[x + y*SCREEN_WIDTH] = __builtin_bswap16(0xF800);
+        }
     }
 
     while(lcd_renderingInProgress()){ }
@@ -64,7 +67,10 @@ void blink(void *arg)
     puts("Partial render 2\r");
     for(uint8_t y = 60; y < 80; y++)
     {
-        fb[y*SCREEN_WIDTH] = __builtin_bswap16(0x001F);
+        for(uint8_t x = 0; x < SCREEN_WIDTH; x++)
+        {
+            fb[x + y*SCREEN_WIDTH] = __builtin_bswap16(0x001F);
+        }
     }
 
     while(lcd_renderingInProgress()){ }
