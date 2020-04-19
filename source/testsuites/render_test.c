@@ -79,6 +79,7 @@ void blink(void *arg)
     #endif
 
     /* All screen white */
+    puts("Clearing screen\r");
     for(i = 0; i < SCREEN_HEIGHT*SCREEN_WIDTH; i++)
     {
         fb[i] = __builtin_bswap16(0xFFFF);
@@ -88,6 +89,7 @@ void blink(void *arg)
     lcd_render();
 
     #ifdef TEST_SPLIT_RENDER
+    puts("Partial render 1\r");
     for(uint8_t y = 10; y < 20; y++)
     {
         fb[y*SCREEN_WIDTH] = __builtin_bswap16(0xF800);
@@ -96,6 +98,7 @@ void blink(void *arg)
     while(lcd_renderingInProgress()) ;
     lcd_renderRows(10, 20);
 
+    puts("Partial render 2\r");
     for(uint8_t y = 40; y < 60; y++)
     {
         fb[y*SCREEN_WIDTH] = __builtin_bswap16(0x001F);
@@ -104,6 +107,8 @@ void blink(void *arg)
     while(lcd_renderingInProgress()) ;
     lcd_renderRows(40, 60);
     #endif
+
+    puts("Render test end\r");
 
     while(1)
     {
