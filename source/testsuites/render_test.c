@@ -38,6 +38,8 @@
 void blink(void *arg)
 {
     lcd_init();
+    lcd_setBacklightLevel(0xFF);
+
     uint16_t *fb = lcd_getFrameBuffer();
 
     /* Upper half red and lower half green */
