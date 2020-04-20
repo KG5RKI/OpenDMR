@@ -28,6 +28,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include "FreeRTOS.h"
+#include "semphr.h"
 #include "HX83XX_charset.h"
 #include "graphics.h"
 #include "lcd.h"
@@ -55,6 +57,7 @@ static float _angleOffset = DEFAULT_ANGLE_OFFSET;
 #define ROW_HEIGHT 16
 
 uint16_t *screenBuf;
+SemaphoreHandle_t renderMutex; // Rendering mutex
 
 /*
  * These two colors will be used as background,foreground and font color
@@ -66,6 +69,7 @@ uint16_t fontColor;
 
 INLINE void graphicsInit(uint16_t bg, uint16_t fg, uint16_t font)
 {
+    renderMutex = xSemaphoreCreateMutex();
     bgColor = bg;
     fgColor = fg;
     fontColor = font;
@@ -100,19 +104,40 @@ INLINE void clearRows(int16_t startRow, int16_t endRow, uint16_t backgroundColor
 
 INLINE void render(void)
 {
-	renderRows(0,N_ROWS);
+    /* See if we can obtain the semaphore.  If the semaphore is not
+    available wait 10 ticks to see if it becomes free. */
+    if(xSemaphoreTake(renderMutex, (TickType_t)100 )==pdTRUE)
+    {
+        /* Wait for previous rendering operations to terminate */
+        while (lcd_renderingInProgress()) { }
+        lcd_render();
+        xSemaphoreGive(renderMutex);
+    }
+    // Cannot obtain access to the render routine!
 }
 
 INLINE void renderRows(int16_t startRow, int16_t endRow)
 {
-    gpio_setPin(GPIOE, 1);
-    /* Wait for previous rendering operations to terminate */
-    while (lcd_renderingInProgress()) ;
-    lcd_renderRows(startRow * ROW_HEIGHT, endRow * ROW_HEIGHT);
-    /* Force synchronous rendering, asynchronous rendering is broken */
-    while (lcd_renderingInProgress()) {
+	// Boundaries
+	if (((startRow < 0) || (endRow < 0)) ||
+        ((startRow > N_ROWS) || (endRow > N_ROWS)) || (startRow == endRow))
+		return;
+
+	if (endRow < startRow)
+	{
+		swap(startRow, endRow);
+	}
+
+    /* See if we can obtain the semaphore.  If the semaphore is not
+    available wait 10 ticks to see if it becomes free. */
+    if(xSemaphoreTake(renderMutex, (TickType_t)100 )==pdTRUE)
+    {
+        /* Wait for previous rendering operations to terminate */
+        while (lcd_renderingInProgress()) { }
+        lcd_renderRows(startRow * ROW_HEIGHT, endRow * ROW_HEIGHT);
+        xSemaphoreGive(renderMutex);
     }
-    gpio_clearPin(GPIOE, 1);
+    // Cannot obtain access to the render routine!
 }
 
 INLINE void printCentered(uint8_t y, const  char *text, font_t fontSize)

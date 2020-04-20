@@ -37,7 +37,8 @@
 
 void blink(void *arg)
 {
-    lcd_init();
+    graphicsInit();
+    //lcd_init();
     lcd_setBacklightLevel(0xFF);
 
     uint16_t *fb = lcd_getFrameBuffer();
@@ -61,8 +62,9 @@ void blink(void *arg)
         }
     }
 
-    while(lcd_renderingInProgress()){ }
-    lcd_renderRows(20, 40);
+    renderRows(1, 3);
+    //while(lcd_renderingInProgress()){ }
+    //lcd_renderRows(20, 40);
 
     puts("Partial render 2\r");
     for(uint8_t y = 60; y < 80; y++)
@@ -73,8 +75,9 @@ void blink(void *arg)
         }
     }
 
-    while(lcd_renderingInProgress()){ }
-    lcd_renderRows(60, 80);
+    renderRows(3, 5);
+    //while(lcd_renderingInProgress()){ }
+    //lcd_renderRows(60, 80);
 
     while(lcd_renderingInProgress()){ }
     puts("Render test end\r");
