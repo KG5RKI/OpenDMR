@@ -37,6 +37,7 @@
 #include "pit.h"
 #include "adc1.h"
 #include "lcd.h"
+#include "gpio.h"
 #include "keyboard.h"
 #include "buttons.h"
 #include "stm32f4xx.h"
@@ -50,27 +51,18 @@ float averageBatteryVoltage;
 
 static void sleep(uint32_t);
 
-static void green_main(void*);
+static void main_task(void*);
+static void led_task(void*);
 static void battery_average(void*);
 
 int main (void)
 {
-	keyboardCode_t keys;
-	int key_event;
-	int keyFunction;
-	uint32_t buttons;
-	int button_event;
-	uint32_t rotary;
-	int rotary_event;
-	int function_event;
-	uiEvent_t ev = { .buttons = 0, .keys = NO_KEYCODE, .rotary = 0, .function = 0, .events = NO_EVENT, .hasEvent = false, .time = 0 };
-	bool keyOrButtonChanged = false;
 
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
-    GPIOE->MODER |= (1 << 2) | 1;
+    gpio_setMode(GPIOE, 0, OUTPUT);
+    gpio_setMode(GPIOE, 1, OUTPUT);
 
-    printf("Welcome to OpenDMR v0.1 compiled for the MD380\n\r");
-    printf("             Viva il DMR libero!              \n\r");
+//    printf("Welcome to OpenDMR v0.1 compiled for the MD380\n\r");
+//    printf("             Viva il DMR libero!              \n\r");
 
 #ifdef LIGHT_THEME
     graphicsInit(COLOR_WHITE, COLOR_BLACK, COLOR_BLACK);
@@ -85,17 +77,36 @@ int main (void)
     adc1_init();
     fw_init_keyboard();
     init_pit();
+
+    xTaskCreate(led_task, "green_task", 256, NULL, 1, NULL);
+    xTaskCreate(main_task, "main_task", 256, NULL, 1, NULL);
+    xTaskCreate(battery_average, "bat_avg_task", 256, NULL, 1, NULL);
+    vTaskStartScheduler();
+
+    /* This point is never reached */
+    for(;;) ;
+}
+
+static void main_task(void* machtnichts) {
+	keyboardCode_t keys;
+	int key_event;
+	int keyFunction;
+	uint32_t buttons;
+	int button_event;
+	uint32_t rotary;
+	int rotary_event;
+	int function_event;
+	uiEvent_t ev = { .buttons = 0, .keys = NO_KEYCODE, .rotary = 0, .function = 0, .events = NO_EVENT, .hasEvent = false, .time = 0 };
+	bool keyOrButtonChanged = false;
+
 	menuBatteryInit(); // Initialize circular buffer
     menuInitMenuSystem();
-
-    xTaskCreate(green_main, "grn", 256, NULL, 1, NULL);
-    xTaskCreate(battery_average, "bat", 256, NULL, 1, NULL);
-    vTaskStartScheduler();
 
     // Call battery menu
 	menuSystemPushNewMenu(MENU_BATTERY);
 
-    for(;;) {
+    for(;;)
+    {
         // Collect input events and pass them to the menu
 	    fw_check_button_event(&buttons, &button_event);
 		fw_check_key_event(&keys, &key_event); // Read keyboard state and event
@@ -113,12 +124,11 @@ int main (void)
     }
 }
 
-static void green_main(void* machtnichts) {
-
+static void led_task(void* machtnichts) {
     for(;;)
     {
-        GPIOE->ODR ^= (1 << 0); // PE0
-        sleep(1000);
+        gpio_togglePin(GPIOE, 0);
+        vTaskDelay(500);
     }
 }
 
@@ -127,30 +137,25 @@ static void battery_average(void* machtnichts) {
     static bool batteryVoltageHasChanged = false;
     static int battery_voltage_tick = 0;
 
-    battery_voltage = adc1_getMeasurement(0);
     // Battery is sensed through a 1:3 resistor divider
-	averageBatteryVoltage = battery_voltage * 3.0f;
+    battery_voltage = adc1_getMeasurement(0) * 3 / 100;
+	averageBatteryVoltage = battery_voltage;
 	battery_voltage_tick=0;
 
 	menuBatteryPushBackVoltage(battery_voltage);
 
     for(;;)
     {
-		int tmp_battery_voltage = adc1_getMeasurement(0);
+		int tmp_battery_voltage = adc1_getMeasurement(0) * 3 / 100;
 		if (battery_voltage != tmp_battery_voltage)
 		{
 			battery_voltage = tmp_battery_voltage;
-			averageBatteryVoltage = (averageBatteryVoltage * (AVERAGE_BATTERY_VOLTAGE_SAMPLE_WINDOW-1) + battery_voltage * 3.0f) / AVERAGE_BATTERY_VOLTAGE_SAMPLE_WINDOW;
+			averageBatteryVoltage = (averageBatteryVoltage * (AVERAGE_BATTERY_VOLTAGE_SAMPLE_WINDOW-1) + battery_voltage) / AVERAGE_BATTERY_VOLTAGE_SAMPLE_WINDOW;
 			batteryVoltageHasChanged = true;
 		}
 
 		menuBatteryPushBackVoltage(averageBatteryVoltage);
     }
-}
-
-static void sleep(uint32_t ms)
-{
-    vTaskDelay(ms);
 }
 
 void vApplicationTickHook() { }

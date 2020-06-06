@@ -141,8 +141,8 @@ static void updateScreen(bool forceRedraw)
 		{
 			static float prevAverageBatteryVoltage = 0.0f;
 
-			//if ((prevAverageBatteryVoltage != averageBatteryVoltage) || (averageBatteryVoltage < BATTERY_CRITICAL_VOLTAGE) || forceRedraw)
-			//{
+			if ((prevAverageBatteryVoltage != averageBatteryVoltage) || (averageBatteryVoltage < BATTERY_CRITICAL_VOLTAGE) || forceRedraw)
+			{
 				char buffer[17];
 				int val1 = averageBatteryVoltage / 10;
 				int val2 = averageBatteryVoltage - (val1 * 10);
@@ -160,18 +160,18 @@ static void updateScreen(bool forceRedraw)
 					fillRect(0, 14, DISPLAY_SIZE_X, DISPLAY_SIZE_Y-14, COLOR_BLACK);
 					// Draw...
 					// Inner body frame
-					drawRoundRect(97, 20, 26, DISPLAY_SIZE_Y-22, 3, COLOR_WHITE);
+					drawRoundRect(DISPLAY_SIZE_X - 41, 20, 26, DISPLAY_SIZE_Y-22, 3, COLOR_WHITE);
 					// Outer body frame
-					drawRoundRect(96, 19, 28, DISPLAY_SIZE_Y-20, 3, COLOR_WHITE);
+					drawRoundRect(DISPLAY_SIZE_X - 42, 19, 28, DISPLAY_SIZE_Y-20, 3, COLOR_WHITE);
 					// Positive pole frame
-					fillRoundRect(96+9, 15, 10, 6, 2, COLOR_WHITE);
+					fillRoundRect(DISPLAY_SIZE_X - 32, 15, 10, 6, 2, COLOR_WHITE);
 				}
 				else
 				{
 					// Clear voltage area
 					fillRect(20, 22, (4 * 16), 32, COLOR_BLACK);
 					// Clear level area
-					fillRoundRect(100, 23, 20, DISPLAY_SIZE_Y - 28, 2, COLOR_BLACK);
+					fillRoundRect(DISPLAY_SIZE_X - 38, 23, 20, DISPLAY_SIZE_Y - 28, 2, COLOR_BLACK);
 				}
 
 				printAt(20, 22, buffer, FONT_SIZE_4);
@@ -183,11 +183,14 @@ static void updateScreen(bool forceRedraw)
 				}
 
 				// Draw Level
-				fillRoundRect(100, 23 + DISPLAY_SIZE_Y - 28 - h , 20, h, 2, (averageBatteryVoltage < BATTERY_CRITICAL_VOLTAGE) ? blink : true);
-			//}
+				fillRoundRect(DISPLAY_SIZE_X - 38, 23 + DISPLAY_SIZE_Y - 28 - h , 20, h, 2, (averageBatteryVoltage < BATTERY_CRITICAL_VOLTAGE && blink) ? COLOR_BLACK : COLOR_WHITE);
+			}
 
 			// Low blinking arrow
-			fillTriangle(63, DISPLAY_SIZE_Y -1 , 59, (DISPLAY_SIZE_Y -5), 67, (DISPLAY_SIZE_Y -5), blink);
+			fillTriangle(63, DISPLAY_SIZE_Y -1 ,
+                         59, (DISPLAY_SIZE_Y -5),
+                         67, (DISPLAY_SIZE_Y -5),
+                         blink ? COLOR_BLACK : COLOR_WHITE);
 		}
 		break;
 
@@ -273,7 +276,10 @@ static void updateScreen(bool forceRedraw)
 			}
 
 			// Upwards blinking arrow
-			fillTriangle(63,(DISPLAY_SIZE_Y - 5), 59,(DISPLAY_SIZE_Y - 1), 67,(DISPLAY_SIZE_Y - 1), blink);
+			fillTriangle(63, (DISPLAY_SIZE_Y - 5),
+                         59, (DISPLAY_SIZE_Y - 1),
+                         67, (DISPLAY_SIZE_Y - 1),
+                         blink ? COLOR_BLACK : COLOR_WHITE);
 		}
 		break;
 	}

@@ -106,7 +106,7 @@ INLINE void render(void)
 {
     /* See if we can obtain the semaphore.  If the semaphore is not
     available wait 10 ticks to see if it becomes free. */
-    if(xSemaphoreTake(renderMutex, (TickType_t)100 )==pdTRUE)
+    if(xSemaphoreTake(renderMutex, (TickType_t)100)==pdTRUE)
     {
         /* Wait for previous rendering operations to terminate */
         while (lcd_renderingInProgress()) { }
