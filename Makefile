@@ -205,7 +205,7 @@ main.elf: $(OBJ) #all-recursive
 
 flash: main_wrapped.bin
 	$(ECHO) "[DFU ] $<"
-	$(Q)./scripts/md380_dfu.py upgrade $<
+	$(Q)./scripts/md380_dfu.py new_upgrade $<
 
 main_wrapped.bin: main.bin
 	$(ECHO) "[WRAP] $<"
