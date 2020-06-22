@@ -184,7 +184,7 @@ AS  := arm-none-eabi-as
 CP  := arm-none-eabi-objcopy
 SZ  := arm-none-eabi-size
 
-all: main.bin
+all: main_wrapped.bin
 
 main.bin: main.elf
 	$(ECHO) "[CP  ] main.hex"
@@ -211,7 +211,7 @@ main.elf: $(OBJ) #all-recursive
 
 flash: main_wrapped.bin
 	$(ECHO) "[DFU ] $<"
-	$(Q)./scripts/md380_dfu.py upgrade $<
+	$(Q)./scripts/md380_dfu.py new_upgrade $<
 
 main_wrapped.bin: main.bin
 	$(ECHO) "[WRAP] $<"
