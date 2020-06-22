@@ -69,7 +69,8 @@ void blink(void *arg)
 
 int main (void)
 {
-    gpio_setMode(GPIOE, 0, OUTPUT);
+    gpio_setMode(GPIOD, 8, OUTPUT);
+    gpio_setPin(GPIOD, 8);
 
     xTaskCreate(blink, "blink", 256, NULL, 0, NULL);
     vTaskStartScheduler();
